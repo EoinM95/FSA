@@ -19,7 +19,7 @@ public abstract class FSA implements Serializable{
 	
 	abstract public void setFinal(int stateNumber);
 	
-	abstract public boolean contains(String word);
+	abstract public boolean accepts(String word);
 	abstract public int size();
 	
 	abstract public void save(String filename);

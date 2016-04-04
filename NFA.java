@@ -116,7 +116,7 @@ public class NFA extends FSA implements Iterable<NFA.State>{
 		states.get(stateNumber).setFinal();
 	}
 	
-	public boolean contains(String word){
+	public boolean accepts(String word){
 		determinise();
 		State current=initialState;
 		int length=word.length();

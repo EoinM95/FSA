@@ -18,11 +18,23 @@ public class DFA extends FSA implements Iterable<DFA.State>{
 	static class State{
 		private Hashtable<String,State> arcs;
 		private boolean isFinal;
-		public State(){
+		private String name;
+		private State previous;
+		
+		public State(State p){
+			previous=p;
 			arcs=new Hashtable<String,State>();
 			isFinal=false;
 		}
-
+		
+		public void setName(String n){
+			name=n;
+		}
+		
+		public String getName(){
+			return name;
+		}
+		
 		public Hashtable<String,State> arcs(){
 			return arcs;
 		}
@@ -34,7 +46,7 @@ public class DFA extends FSA implements Iterable<DFA.State>{
 
 		public State addArc(String letter){
 			if(transition(letter)==null){
-				State next=new State();
+				State next=new State(this);
 				arcs.put(letter,next);
 			}
 			return transition(letter);
@@ -71,7 +83,7 @@ public class DFA extends FSA implements Iterable<DFA.State>{
 	private State errorState;
 	private HashSet<String> alphabet;
 	public DFA(){
-		initialState=new State();
+		initialState=new State(null);
 		states=new ArrayList<State>();
 		states.add(initialState);
 		alphabet=new HashSet<String>();
@@ -97,34 +109,44 @@ public class DFA extends FSA implements Iterable<DFA.State>{
 	public void addTransition(int startState, String letter, int nextState){
 		State next;
 		if(nextState>=states.size()){
-			next=new State();
-			states.add(next);
+			int limit=(nextState-(states.size()-1));
+			for(int i=0;i<limit;i++){
+				if(i==limit-1)
+					next=new State(states.get(startState));
+				else
+					next=new State(null);
+				states.add(next);
+			}
 		}	
-		else
-			next=states.get(nextState);
+		next=states.get(nextState);
 		states.get(startState).addArc(letter,next);
+		alphabet.add(letter);
 	}
 
 	
 
 	public void setFinal(int stateNumber){
-		states.get(stateNumber).setFinal();
+		if(stateNumber<states.size())
+			states.get(stateNumber).setFinal();
+		else
+			System.out.println("Etat "+stateNumber+" n'existe pas");
 	}
 
-	public boolean contains(String word){
+	public boolean accepts(String word){
 		State current=initialState;
 		int length=word.length();
 		for(int i=0;i<length;i++){
 			String letter = String.valueOf(word.charAt(i));
-			if(current.transition(letter)==null)
+			State next=current.transition(letter);
+			if(next==null||next==errorState)
 				return false;
-			current=current.transition(letter);
+			current=next;
 		}		
 		return current.isFinal();
 	}
 
 	public void complete(){
-		errorState=new State();
+		errorState=new State(null);
 		for(State state:this){
 			Set<String> keySet=state.arcs.keySet();
 			if(!(keySet.containsAll(alphabet))){
@@ -163,8 +185,25 @@ public class DFA extends FSA implements Iterable<DFA.State>{
 
 	@Override
 	public void save(String filename) {
-		// TODO Auto-generated method stub
-		
+		StringBuilder toSave=new StringBuilder();
+		toSave.append("init 0"+FSABuilder.LS);
+		int i=0;
+		for(State state:this){
+			state.setName(""+i++);
+		}
+		if(errorState!=null)
+			errorState.setName("État puis");
+		for(State state:this){
+			for(String letter:state.arcs().keySet()){
+				toSave.append(state.getName());
+				toSave.append(" "+letter+" ");
+				toSave.append(state.transition(letter).getName());
+				toSave.append(FSABuilder.LS);
+			}
+			if(state.isFinal())
+				toSave.append("final "+state.getName()+FSABuilder.LS);
+		}
+		System.out.println(toSave);
 	}
 
 	@Override
@@ -177,19 +216,19 @@ public class DFA extends FSA implements Iterable<DFA.State>{
 		f.add("Hello");
 		f.add("World");
 		//new FSAView(f);
-		System.out.println(f.contains("Hello"));
-		System.out.println(f.contains("World"));
-		System.out.println(f.contains("Worl"));
-		System.out.println(f.contains("hi"));
+		System.out.println(f.accepts("Hello"));
+		System.out.println(f.accepts("World"));
+		System.out.println(f.accepts("Worl"));
+		System.out.println(f.accepts("hi"));
 		System.out.println(f.size());
 		f.minimise();
-		System.out.println(f.contains("Hello"));
-		System.out.println(f.contains("World"));
-		System.out.println(f.contains("Worl"));
-		System.out.println(f.contains("hi"));
+		System.out.println(f.accepts("Hello"));
+		System.out.println(f.accepts("World"));
+		System.out.println(f.accepts("Worl"));
+		System.out.println(f.accepts("hi"));
 		System.out.println(f.size());
 		f.add("Hello");
-		System.out.println(f.contains("Hello"));
+		System.out.println(f.accepts("Hello"));
 		System.out.println(f.size());
 	}
 

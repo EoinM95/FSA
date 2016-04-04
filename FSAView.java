@@ -18,7 +18,8 @@ public class FSAView extends JFrame {
 	 */
 	private final static int SIM_AREA=700;
 	private final static int WINDOW_SIZE=800;
-	
+	private final static int RADIUS=40;
+	private final static int SPACE=40;
 	private FSA fsa;
 	private ArrayList<Shape> states;
 	private BufferedImage backBuffer;
@@ -41,7 +42,13 @@ public class FSAView extends JFrame {
 	
 	private void initialise() {
 		int i=0;
-		
+		if(fsa instanceof DFA){
+			DFA dfa=(DFA)fsa;
+			for(DFA.State state:dfa){
+				Shape circle=new Ellipse2D.Double();
+				states.add(circle);
+			}
+		}
 		update();
 	}
 	
