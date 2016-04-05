@@ -1,8 +1,11 @@
 package fsa;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.regex.Pattern;
 import java.util.regex.Matcher;
@@ -68,17 +71,54 @@ public final class FSABuilder {
 		}
 	}
 	
+	public static boolean write(String output, String path, boolean canOverwrite){
+		File outputFile=new File(path);
+		PrintWriter outputStream=null;
+		try{
+			if(outputFile.exists()){
+				if(canOverwrite){
+					outputStream = new PrintWriter(new FileWriter(outputFile)) ;
+					outputStream.print(output);
+				}
+				else{
+					outputStream = new PrintWriter(new FileWriter(outputFile,true)) ;
+					outputStream.print(LS+output);
+				}
+			}
+			else if(outputFile.createNewFile()){
+				outputStream = new PrintWriter(new FileWriter(outputFile)) ;
+				outputStream.print(output);
+			}
+			else
+			{
+				System.out.println("Nom du fichier pas valide");
+				return false;
+			}
+		}
+		catch (IOException e) {
+			System.out.println("Erreur IO");
+			return false;
+		}
+		if(outputStream!=null)
+			outputStream.close();
+		return true;
+	}
+	
+	
 	public static void main(String[] args){
 		FSA f=buildFromFile("test.txt").get(0);
-		System.out.println(f.accepts("aa"));
-		System.out.println(f.accepts("aaaa"));
-		System.out.println(f.accepts("aaaab"));
-		f.save("");
+		//System.out.println(f.accepts("aa"));
+		//System.out.println(f.accepts("aaaa"));
+		//System.out.println(f.accepts("aaaab"));
+		f.save("",false);
+		System.out.println(f.size());
 		((DFA)f).minimise();
+		System.out.println(f.size());
+		f.save("",false);
+		new FSAView(f);
 		System.out.println(f.accepts("aa"));
 		System.out.println(f.accepts("aaaa"));
 		System.out.println(f.accepts("aaaab"));
-		f.save("");
 	}
 	
 	

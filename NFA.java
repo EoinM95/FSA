@@ -1,7 +1,11 @@
 package fsa;
+import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.Set;
+
+import fsa.DFA.State;
 
 
 public class NFA extends FSA implements Iterable<NFA.State>{
@@ -15,6 +19,7 @@ public class NFA extends FSA implements Iterable<NFA.State>{
 	static class State{
 		private Hashtable<String,ArrayList<State>> arcs;
 		private boolean isFinal;
+		private String name;
 		public State(){
 			arcs=new Hashtable<String,ArrayList<State>>();
 			isFinal=false;
@@ -64,6 +69,11 @@ public class NFA extends FSA implements Iterable<NFA.State>{
 		public void setFinal() {
 			isFinal = true;
 		}
+
+		public void setName(String string) {
+			name=string;
+			
+		}
 	}
 	
 	private State initialState;
@@ -95,38 +105,53 @@ public class NFA extends FSA implements Iterable<NFA.State>{
 	public void addTransition(int startState, String letter, int nextState){
 		State next;
 		if(nextState>=states.size()){
-			next=new State();
-			states.add(next);
+			int limit=(nextState-(states.size()-1));
+			for(int i=0;i<limit;i++){
+				next=new State();
+				states.add(next);
+			}
 		}	
-		else
-			next=states.get(nextState);
+		next=states.get(nextState);
 		states.get(startState).addArc(letter,next);
 	}
 	
 	public void addEpsilonTransition(int startState, int nextState){
 		State next;
-		if(nextState>=states.size())
-			next=new State();
-		else
-			next=states.get(nextState);
+		if(nextState>=states.size()){
+			int limit=(nextState-(states.size()-1));
+			for(int i=0;i<limit;i++){
+				next=new State();
+				states.add(next);
+			}
+		}	
+		
+		next=states.get(nextState);
 		states.get(startState).addArc(EPSILON,next);
 	}
 	
 	public void setFinal(int stateNumber){
-		states.get(stateNumber).setFinal();
+		if(stateNumber<states.size())
+			states.get(stateNumber).setFinal();
+		else
+			System.out.println("Etat "+stateNumber+" n'existe pas");
 	}
 	
 	public boolean accepts(String word){
-		determinise();
-		State current=initialState;
-		int length=word.length();
-		for(int i=0;i<length;i++){
-			String letter = String.valueOf(word.charAt(i));
-			if(current.transition(letter)==null)
-				return false;
-			current=current.transition(letter).get(0);
-		}		
-		return current.isFinal();
+		epsilonFree();
+		return acceptsRec(word,states.get(0));
+	}
+	
+	private boolean acceptsRec(String word,State current){
+		if(word.equals(""))
+			return current.isFinal();
+		String letter = String.valueOf(word.charAt(0));
+		ArrayList<State> transitions=current.transition(letter);
+		if(transitions==null)
+			return false;
+		for(State state:transitions)
+			if(acceptsRec(word.substring(1,word.length()),state))
+				return true;
+		return false;
 	}
 	
 	public void epsilonFree(){
@@ -147,16 +172,15 @@ public class NFA extends FSA implements Iterable<NFA.State>{
 	
 	public DFA determinise(){
 		epsilonFree();
+		setStateNames();
 		DFA determinised=new DFA();
-		int index=0;
+		HashSet<DFA.State> dfaStates=new HashSet<DFA.State>();
+		//int index=0;
 		for(State state:this){
 			Hashtable<String,ArrayList<State>> arcs=state.arcs();
-			ArrayList<State> statesList=new ArrayList<State>();
 			for(String label:arcs.keySet()){
-				if(arcs.get(label).size()>1){
-					
-				}
-				
+				DFA.State stateSet=determinised.mergeNFAStates(state.transition(label));
+				dfaStates.add(stateSet);
 			}
 		}
 		return determinised;
@@ -174,10 +198,53 @@ public class NFA extends FSA implements Iterable<NFA.State>{
 	}
 
 	@Override
-	public void save(String filename) {
-		// TODO Auto-generated method stub
-		
+	public void save(String filename,boolean overwrite) {
+		DFA dfa=determinise();
+		dfa.minimise();
+		dfa.save(filename,overwrite);	
 	}
 	
+	public void setStateNames() {
+		int i=0;
+		for(State state:this){
+			state.setName(""+i++);
+		}
+	}
 	
+
+	@Override
+	public boolean isDeterministic() {
+		for(State state:this){
+			Set<String> keys=state.arcs().keySet();
+			if(keys.contains(EPSILON))
+				return false;
+			for(String label:keys){
+				if(state.transition(label).size()>1)
+					return false;
+			}
+		}
+		return true;
+	}
+
+	@Override
+	public boolean isMinimal() {
+		return false;
+	}
+
+	@Override
+	public boolean isComplete() {
+		// TODO Auto-generated method stub
+		return false;
+	}
+	
+	public static void main(String[] args){
+		NFA f=new NFA();
+		f.add("Hello");
+		f.add("World");
+		System.out.println(f.accepts("Hello"));
+		System.out.println(f.accepts("World"));
+		System.out.println(f.accepts("Worl"));
+		System.out.println(f.accepts("hi"));
+		System.out.println(f.size());
+	}
 }
