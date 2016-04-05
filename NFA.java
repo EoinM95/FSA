@@ -159,6 +159,8 @@ public class NFA extends FSA implements Iterable<NFA.State>{
 			if(state.transition(EPSILON)!=null){
 				ArrayList<State> intermediateStates=state.transition(EPSILON);
 				for(State intermediateState:intermediateStates){
+					if(intermediateState.isFinal())
+						state.setFinal();
 					for(String label:intermediateState.arcs().keySet()){
 						for(State nextState:intermediateState.arcs().get(label))
 							state.addArc(label,nextState);
@@ -174,15 +176,20 @@ public class NFA extends FSA implements Iterable<NFA.State>{
 		epsilonFree();
 		setStateNames();
 		DFA determinised=new DFA();
-		HashSet<DFA.State> dfaStates=new HashSet<DFA.State>();
-		//int index=0;
+		int index=0;
+		DFA.State dfaState= new DFA.State();
 		for(State state:this){
-			Hashtable<String,ArrayList<State>> arcs=state.arcs();
-			for(String label:arcs.keySet()){
-				DFA.State stateSet=determinised.mergeNFAStates(state.transition(label));
-				dfaStates.add(stateSet);
+			DFA.State stateSet=null;
+			for(String label:state.arcs().keySet()){
+				stateSet=determinised.mergeNFAStates(state.transition(label));
+				dfaState.addArc(label,stateSet);
+				//determinised.addState(stateSet,index++);
 			}
-		}
+			determinised.addState(dfaState,index++);
+			dfaState=stateSet;
+			if(dfaState==null)
+				break;
+		}	
 		return determinised;
 		
 	}
@@ -240,11 +247,17 @@ public class NFA extends FSA implements Iterable<NFA.State>{
 	public static void main(String[] args){
 		NFA f=new NFA();
 		f.add("Hello");
-		f.add("World");
-		System.out.println(f.accepts("Hello"));
-		System.out.println(f.accepts("World"));
-		System.out.println(f.accepts("Worl"));
-		System.out.println(f.accepts("hi"));
-		System.out.println(f.size());
+		//f.add("World");
+		//System.out.println(f.accepts("Hello"));
+		//f.add("Hell");
+		//f.add("Hi");
+		//System.out.println(f.accepts("World"));
+		//System.out.println(f.size());
+		DFA dfa= f.determinise();
+		//System.out.println(dfa.accepts("Hello"));
+		dfa.save("",false);
+		//System.out.println(dfa.accepts("Hell"));
+		//System.out.println(dfa.accepts("Hi"));
+		//System.out.println(dfa.accepts("World"));
 	}
 }

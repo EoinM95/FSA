@@ -244,8 +244,27 @@ public class DFA extends FSA implements Iterable<DFA.State>{
 		return true;
 	}
 
-	protected State mergeNFAStates(ArrayList<NFA.State> states){
-		return new State();
+	/*protected void mergeAndLinkNFAStates(State state,String letter,ArrayList<NFA.State> nfaStates){
+		State next=mergeNFAStates(nfaStates);
+		state.addArc(letter,next);
+		
+	}*/
+	
+	
+	protected State mergeNFAStates(ArrayList<NFA.State> nfaStates){
+			State stateSet=new State();
+			for(NFA.State nfaState:nfaStates){
+				if(nfaState.isFinal())
+					stateSet.setFinal();
+				for(String label:nfaState.arcs().keySet()){
+					if(nfaState.transition(label).size()==1)
+						states.add(stateSet.addArc(label));
+					else
+						states.add(stateSet.addArc(label,mergeNFAStates(nfaState.transition(label))));
+				}
+			}
+			//states.add(stateSet);
+			return stateSet;
 	}
 	
 	protected State getState(int index){
@@ -253,8 +272,12 @@ public class DFA extends FSA implements Iterable<DFA.State>{
 		return states.get(index);
 	}
 	
-	protected void addState(State state){
-		states.add(state);
+	protected void addState(State state, int index){
+		if(states.contains(state)) return;
+		if(index>=states.size())
+			states.add(state);
+		else
+			states.set(index,state);
 	}
 	
  	public static void main(String args[]){
