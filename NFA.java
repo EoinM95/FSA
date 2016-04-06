@@ -1,12 +1,10 @@
 package fsa;
+
 import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Set;
-
-import fsa.DFA.State;
-
 
 public class NFA extends FSA implements Iterable<NFA.State>{
 	
@@ -71,8 +69,11 @@ public class NFA extends FSA implements Iterable<NFA.State>{
 		}
 
 		public void setName(String string) {
-			name=string;
-			
+			name=string;	
+		}
+		
+		public String getName(){
+			return name;
 		}
 	}
 	
@@ -174,24 +175,42 @@ public class NFA extends FSA implements Iterable<NFA.State>{
 	
 	public DFA determinise(){
 		epsilonFree();
-		setStateNames();
 		DFA determinised=new DFA();
 		int index=0;
-		DFA.State dfaState= new DFA.State();
 		for(State state:this){
+			if(state.isFinal())
+				determinised.setFinal(index);
+			for(String label:state.arcs().keySet()){
+				determiniseRec(determinised,state.transition(label),label,index);
+			}
+			index++;
+		}	
+		//int index=0;
+		//DFA.State dfaState= new DFA.State();
+		//HashSet<DFA.State> newStates=new HashSet<DFA.State>();
+		/*for(State state:this){
 			DFA.State stateSet=null;
 			for(String label:state.arcs().keySet()){
 				stateSet=determinised.mergeNFAStates(state.transition(label));
 				dfaState.addArc(label,stateSet);
-				//determinised.addState(stateSet,index++);
+				newStates.add(stateSet);
 			}
 			determinised.addState(dfaState,index++);
 			dfaState=stateSet;
-			if(dfaState==null)
-				break;
-		}	
+		}*/	
 		return determinised;
 		
+	}
+	
+	private void determiniseRec(DFA dfa,ArrayList<State> transitions,String letter,int index){
+		dfa.addTransition(index,letter,index+1);
+		for(State state:transitions){
+			for(String label:state.arcs().keySet()){
+				//dfa.addTransition(index,label,index+1);
+				determiniseRec(dfa,state.transition(label),label,index+1);
+				index++;
+			}
+		}
 	}
 	
 	
@@ -247,17 +266,17 @@ public class NFA extends FSA implements Iterable<NFA.State>{
 	public static void main(String[] args){
 		NFA f=new NFA();
 		f.add("Hello");
-		//f.add("World");
+		f.add("World");
 		//System.out.println(f.accepts("Hello"));
 		//f.add("Hell");
 		//f.add("Hi");
 		//System.out.println(f.accepts("World"));
 		//System.out.println(f.size());
 		DFA dfa= f.determinise();
-		//System.out.println(dfa.accepts("Hello"));
 		dfa.save("",false);
+		System.out.println(dfa.accepts("Hello"));
 		//System.out.println(dfa.accepts("Hell"));
 		//System.out.println(dfa.accepts("Hi"));
-		//System.out.println(dfa.accepts("World"));
+		System.out.println(dfa.accepts("World"));
 	}
 }

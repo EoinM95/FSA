@@ -1,5 +1,6 @@
 package fsa;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.Iterator;
@@ -36,6 +37,10 @@ public class DFA extends FSA implements Iterable<DFA.State>{
 		
 		public Hashtable<String,State> arcs(){
 			return arcs;
+		}
+		
+		public int hashCode(){
+			return arcs.hashCode();
 		}
 
 		public State transition(String letter){
@@ -302,6 +307,11 @@ public class DFA extends FSA implements Iterable<DFA.State>{
 		//f.save("",false);
 		System.out.println(f.accepts("Hello"));
 		System.out.println(f.size());
+	}
+
+
+	public void addAll(Collection<State> newStates) {
+		states.addAll(newStates);
 	}
 	
 }
