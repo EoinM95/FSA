@@ -295,13 +295,15 @@ public class NFA extends FSA implements Iterable<NFA.State>{
 				for(int j=i+1;j<alpha.length;j++){
 					String letterA=(String)alpha[i];
 					String letterB=(String)alpha[j];
-					for(State nextA:state.transition(letterA)){
-						for(State nextB:state.transition(letterB)){
-							if(nextA.isEquivalent(nextB))
-								return false;		
+					if(state.transition(letterA)!=null&&state.transition(letterB)!=null){
+						for(State nextA:state.transition(letterA)){
+							for(State nextB:state.transition(letterB)){
+								if(nextA.isEquivalent(nextB))
+									return false;		
+							}
 						}
-					}
-				}		
+					}	
+				}	
 		}
 		return true;
 	}
@@ -338,6 +340,20 @@ public class NFA extends FSA implements Iterable<NFA.State>{
 		return determinise().minimise();
 	}
 	
+	@Override
+	public FSA complete() {
+		return determinise().complete();
+	}
+
+	@Override
+	public boolean isEpsilonFree() {
+		for(State state:this){
+			if(state.arcs().keySet().contains(EPSILON))
+				return false;
+		}
+		return true;
+	}
+	
 	public static void main(String[] args){
 		NFA f=new NFA();
 		f.add("Hello");
@@ -355,10 +371,4 @@ public class NFA extends FSA implements Iterable<NFA.State>{
 		System.out.println(dfa.accepts("Hi"));
 		System.out.println(dfa.accepts("World"));
 	}
-
-	@Override
-	public FSA complete() {
-		return determinise().complete();
-	}
-
 }

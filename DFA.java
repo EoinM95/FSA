@@ -1,6 +1,5 @@
 package fsa;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.Iterator;
@@ -311,8 +310,18 @@ public class DFA extends FSA implements Iterable<DFA.State>{
 	}
 	
 	@Override
+	public void epsilonFree() {
+		return;
+	}
+	
+	@Override
 	public DFA determinise() {
 		return this;
+	}
+	
+	@Override
+	public boolean isEpsilonFree() {
+		return true;
 	}
 	
  	public static void main(String args[]){
@@ -337,5 +346,4 @@ public class DFA extends FSA implements Iterable<DFA.State>{
 		System.out.println(f.accepts("Hello"));
 		System.out.println(f.size());
 	}
-
 }

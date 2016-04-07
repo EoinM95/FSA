@@ -27,12 +27,14 @@ public abstract class FSA implements Serializable{
 	abstract public boolean isDeterministic();
 	abstract public boolean isMinimal();
 	abstract public boolean isComplete();
+	abstract public boolean isEpsilonFree();
 	abstract public void save(String filename, boolean overwrite);
 	abstract public void setStateNames();
 	abstract public String transitionList();
 	abstract public FSA determinise();
 	abstract public FSA minimise();
 	abstract public FSA complete();
+	abstract public void epsilonFree();
 	
 	
 
