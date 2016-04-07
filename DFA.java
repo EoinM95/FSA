@@ -44,6 +44,17 @@ public class DFA extends FSA implements Iterable<DFA.State>{
 		public int hashCode(){
 			return arcs.hashCode();
 		}
+		
+		public boolean equals(Object o){
+			if(!(o instanceof State))
+				return false;
+			State other = (State)o;
+			if(other==this)
+				return true;
+			return (this.arcs.keySet().equals(other.arcs.keySet())&&
+					this.arcs.values().equals(other.arcs.values()));
+		}
+		
 
 		public State transition(String letter){
 			if(!arcs.containsKey(letter))return null;
@@ -158,7 +169,7 @@ public class DFA extends FSA implements Iterable<DFA.State>{
 		return current.isFinal();
 	}
 
-	public void complete(){
+	public FSA complete(){
 		errorState=new State();
 		errorState.setError(true);
 		for(State state:this){
@@ -172,9 +183,10 @@ public class DFA extends FSA implements Iterable<DFA.State>{
 				}
 			}
 		}
+		return this;
 	}
 
-	public void minimise(){
+	public FSA minimise(){
 		complete();
 		Object[] alpha=alphabet.toArray();
 		ArrayList<State> temp=new ArrayList<State>();
@@ -193,6 +205,7 @@ public class DFA extends FSA implements Iterable<DFA.State>{
 				}		
 		}
 		//removeUnreachableStates();
+		return this;
 	}
 	
 	protected void removeUnreachableStates(){
@@ -200,7 +213,8 @@ public class DFA extends FSA implements Iterable<DFA.State>{
 		statesNotReached.addAll(states);
 		for(State state:this){
 			for(String letter:state.arcs().keySet()){
-				if(statesNotReached.contains(state.transition(letter))){
+				if(!(state.equals(state.transition(letter)))&&
+						statesNotReached.contains(state.transition(letter))){
 					statesNotReached.remove(state);
 				}
 			}
@@ -221,6 +235,7 @@ public class DFA extends FSA implements Iterable<DFA.State>{
 		FSABuilder.write(toSave.toString(),filename,overwrite);
 	}
 	
+	@Override
 	public String transitionList(){
 		StringBuilder transitions=new StringBuilder();
 		setStateNames();
@@ -236,7 +251,8 @@ public class DFA extends FSA implements Iterable<DFA.State>{
 		}
 		return transitions.toString();
 	}
-
+	
+	@Override
 	public void setStateNames() {
 		int i=0;
 		for(State state:this){
@@ -252,8 +268,6 @@ public class DFA extends FSA implements Iterable<DFA.State>{
 		return states.iterator();
 	}
 	
-
-
 	@Override
 	public boolean isDeterministic() {
 		return true;

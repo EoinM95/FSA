@@ -46,9 +46,17 @@ public final class FSAMain {
 				}
 			}
 		}
+		sc.close();
 	}
 
-	public static void runTestSuite(){}
+	public static void runTestSuite(){
+		try{
+			ArrayList<FSA> automata=FSABuilder.buildFromFile("test.txt");
+		}
+		catch(java.io.IOException e){
+			System.out.println("Fichier des automates pas trouvé");
+		}
+	}
 	
 	public static void constructAutomaton(){}
 	

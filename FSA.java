@@ -19,7 +19,7 @@ public abstract class FSA implements Serializable{
 	abstract public void add(String word);
 	abstract public void addTransition(int startState, String letter, int nextState);
 	public void addEpsilonTransition(int startState,int nextState){
-		System.out.println("Cette opération est seulement disponible pour des NFA");
+		//System.out.println("Cette opération est seulement disponible pour des NFA");
 	}
 	abstract public void setFinal(int stateNumber);	
 	abstract public boolean accepts(String word);
@@ -30,7 +30,9 @@ public abstract class FSA implements Serializable{
 	abstract public void save(String filename, boolean overwrite);
 	abstract public void setStateNames();
 	abstract public String transitionList();
-	abstract public DFA determinise();
+	abstract public FSA determinise();
+	abstract public FSA minimise();
+	abstract public FSA complete();
 	
 	
 

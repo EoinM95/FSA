@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Set;
 
+
 public class NFA extends FSA implements Iterable<NFA.State>{
 	
 	/**
@@ -214,7 +215,7 @@ public class NFA extends FSA implements Iterable<NFA.State>{
 				count++;
 			index+=count;
 		}	
-		//determinised.removeUnreachableStates();
+		determinised.removeUnreachableStates();
 		return determinised;
 		
 	}
@@ -288,13 +289,53 @@ public class NFA extends FSA implements Iterable<NFA.State>{
 
 	@Override
 	public boolean isMinimal() {
-		return false;
+		Object[] alpha=alphabet.toArray();
+		for(State state:this){
+			for(int i=0;i<alpha.length-1;i++)
+				for(int j=i+1;j<alpha.length;j++){
+					String letterA=(String)alpha[i];
+					String letterB=(String)alpha[j];
+					for(State nextA:state.transition(letterA)){
+						for(State nextB:state.transition(letterB)){
+							if(nextA.isEquivalent(nextB))
+								return false;		
+						}
+					}
+				}		
+		}
+		return true;
 	}
 
 	@Override
 	public boolean isComplete() {
-		// TODO Auto-generated method stub
-		return false;
+		for(State state:this)
+			if(!state.arcs.keySet().containsAll(alphabet))
+				return false;
+		return true;
+	}
+	
+	@Override
+	public String transitionList() {
+		StringBuilder transitions=new StringBuilder();
+		setStateNames();
+		for(State state:this){
+			for(String letter:state.arcs().keySet()){
+				for(State next:state.transition(letter)){
+					transitions.append(state.getName());
+					transitions.append(" "+letter+" ");
+					transitions.append(next.getName());
+					transitions.append(FSABuilder.LS);
+				}
+			}
+			if(state.isFinal())
+				transitions.append("final "+state.getName()+FSABuilder.LS);
+		}
+		return transitions.toString();
+	}
+	
+	@Override
+	public FSA minimise() {
+		return determinise().minimise();
 	}
 	
 	public static void main(String[] args){
@@ -316,8 +357,8 @@ public class NFA extends FSA implements Iterable<NFA.State>{
 	}
 
 	@Override
-	public String transitionList() {
-		// TODO Auto-generated method stub
-		return null;
+	public FSA complete() {
+		return determinise().complete();
 	}
+
 }

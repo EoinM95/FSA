@@ -133,7 +133,7 @@ public final class FSABuilder {
 			System.out.println(f.accepts("aaaa"));
 			System.out.println(f.accepts("aaaab"));
 			System.out.println(f.size());
-			DFA dfa=f.determinise();
+			FSA dfa=f.determinise();
 			dfa.minimise();
 			System.out.println(dfa.size());
 			System.out.println(dfa.transitionList());
