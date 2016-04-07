@@ -173,45 +173,51 @@ public class NFA extends FSA implements Iterable<NFA.State>{
 		}
 	}
 	
+
 	public DFA determinise(){
 		epsilonFree();
 		DFA determinised=new DFA();
 		int index=0;
 		for(State state:this){
-			if(state.isFinal())
-				determinised.setFinal(index);
+			
 			for(String label:state.arcs().keySet()){
 				determiniseRec(determinised,state.transition(label),label,index);
 			}
-			index++;
+			if(determinised.getState(index)!=null)
+				determinised.getState(index).setSeen();
+			int count=0;
+			while(determinised.getState(index+count)!=null
+					&&determinised.getState(index+count).wasSeen())
+				count++;
+			index+=count;
 		}	
-		//int index=0;
-		//DFA.State dfaState= new DFA.State();
-		//HashSet<DFA.State> newStates=new HashSet<DFA.State>();
-		/*for(State state:this){
-			DFA.State stateSet=null;
-			for(String label:state.arcs().keySet()){
-				stateSet=determinised.mergeNFAStates(state.transition(label));
-				dfaState.addArc(label,stateSet);
-				newStates.add(stateSet);
-			}
-			determinised.addState(dfaState,index++);
-			dfaState=stateSet;
-		}*/	
 		return determinised;
 		
 	}
 	
 	private void determiniseRec(DFA dfa,ArrayList<State> transitions,String letter,int index){
-		dfa.addTransition(index,letter,index+1);
+		int count=1;
+		while(dfa.getState(index+count)!=null&&dfa.getState(index+count).wasSeen())
+			count++;
+		dfa.addTransition(index,letter,index+count);
+		int tmp=index;
 		for(State state:transitions){
+			if(state.isFinal())
+				dfa.setFinal(tmp+count);
 			for(String label:state.arcs().keySet()){
-				//dfa.addTransition(index,label,index+1);
-				determiniseRec(dfa,state.transition(label),label,index+1);
-				index++;
+				determiniseRec(dfa,state.transition(label),label,tmp+count);
+				dfa.addTransition(index,letter,tmp+count);
+				dfa.getState(tmp+count).setSeen();
+				count=1;
+				while(dfa.getState(tmp+count)!=null&&dfa.getState(tmp+count).wasSeen())
+					count++;
+				tmp+=count;
 			}
 		}
+		if(dfa.getState(tmp)!=null)
+			dfa.getState(tmp).setSeen();
 	}
+	
 	
 	
 	public int size(){
@@ -275,8 +281,8 @@ public class NFA extends FSA implements Iterable<NFA.State>{
 		DFA dfa= f.determinise();
 		dfa.save("",false);
 		System.out.println(dfa.accepts("Hello"));
-		//System.out.println(dfa.accepts("Hell"));
-		//System.out.println(dfa.accepts("Hi"));
+		System.out.println(dfa.accepts("We"));
+		System.out.println(dfa.accepts("Hi"));
 		System.out.println(dfa.accepts("World"));
 	}
 }

@@ -21,9 +21,11 @@ public class DFA extends FSA implements Iterable<DFA.State>{
 		private boolean isFinal;
 		private String name;
 		private boolean error;
+		private boolean seen;
 		public State(){
 			arcs=new Hashtable<String,State>();
 			isFinal=false;
+			seen=false;
 			error=false;
 		}
 		
@@ -64,6 +66,14 @@ public class DFA extends FSA implements Iterable<DFA.State>{
 		 */
 		public boolean isFinal() {
 			return isFinal;
+		}
+		
+		public boolean wasSeen(){
+			return seen;
+		}
+		
+		public void setSeen(){
+			seen=true;
 		}
 		
 		public boolean isEquivalent(State other){
@@ -275,6 +285,17 @@ public class DFA extends FSA implements Iterable<DFA.State>{
 	protected State getState(int index){
 		if(index>=states.size()) return null;
 		return states.get(index);
+	}
+	
+	protected void addState(State state){
+		if(states.contains(state)) return;
+		states.add(state);
+	}
+	
+	protected void addTransition(State a, String letter, State b){
+		if(states.contains(a)&&states.contains(b)){
+			a.addArc(letter,b);
+		}
 	}
 	
 	protected void addState(State state, int index){
