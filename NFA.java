@@ -6,6 +6,8 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Set;
 
+import fsa.DFA.State;
+
 public class NFA extends FSA implements Iterable<NFA.State>{
 	
 	/**
@@ -60,7 +62,17 @@ public class NFA extends FSA implements Iterable<NFA.State>{
 		public boolean isFinal() {
 			return isFinal;
 		}
-
+		
+		public int hashCode(){
+			return arcs.hashCode();
+		}
+		
+		public boolean isEquivalent(State other){
+			return other.arcs.keySet()
+					.containsAll(this.arcs.keySet())
+					&&(this.isFinal==other.isFinal);
+		}
+		
 		/**
 		 * @param isFinal the isFinal to set
 		 */
@@ -79,10 +91,14 @@ public class NFA extends FSA implements Iterable<NFA.State>{
 	
 	private State initialState;
 	private ArrayList<State> states;
+	private HashSet<State> finalStates;
+	private HashSet<String> alphabet;
 	public NFA(){
 		initialState=new State();
 		states=new ArrayList<State>();
 		states.add(initialState);
+		finalStates=new HashSet<State>();
+		alphabet=new HashSet<String>();
 	}
 	
 	public NFA(String regex){
@@ -98,8 +114,10 @@ public class NFA extends FSA implements Iterable<NFA.State>{
 				states.add(current.addArc(letter));
 			ArrayList<State> nextStates=current.transition(letter);
 			current=nextStates.get(nextStates.size()-1);
-			if(i==length-1)
+			if(i==length-1){
 				current.setFinal();
+				finalStates.add(current);
+			}
 		}
 	}
 	
@@ -131,8 +149,10 @@ public class NFA extends FSA implements Iterable<NFA.State>{
 	}
 	
 	public void setFinal(int stateNumber){
-		if(stateNumber<states.size())
+		if(stateNumber<states.size()){
 			states.get(stateNumber).setFinal();
+			finalStates.add(states.get(stateNumber));
+		}
 		else
 			System.out.println("Etat "+stateNumber+" n'existe pas");
 	}
@@ -176,12 +196,16 @@ public class NFA extends FSA implements Iterable<NFA.State>{
 
 	public DFA determinise(){
 		epsilonFree();
+		HashSet<State> finalStatesRemaining=new HashSet<State>();
+		finalStatesRemaining.addAll(finalStates);
 		DFA determinised=new DFA();
 		int index=0;
 		for(State state:this){
-			
+			if(finalStatesRemaining.isEmpty())
+				break;
 			for(String label:state.arcs().keySet()){
-				determiniseRec(determinised,state.transition(label),label,index);
+				determiniseRec(determinised,state.transition(label),label,index,
+						finalStatesRemaining);
 			}
 			if(determinised.getState(index)!=null)
 				determinised.getState(index).setSeen();
@@ -195,24 +219,27 @@ public class NFA extends FSA implements Iterable<NFA.State>{
 		
 	}
 	
-	private void determiniseRec(DFA dfa,ArrayList<State> transitions,String letter,int index){
+	private void determiniseRec(DFA dfa,ArrayList<State> transitions,String letter,int index
+			,HashSet<State> finalStatesRemaining){
 		int count=1;
 		while(dfa.getState(index+count)!=null&&dfa.getState(index+count).wasSeen())
 			count++;
 		dfa.addTransition(index,letter,index+count);
 		int tmp=index;
 		for(State state:transitions){
-			if(state.isFinal())
+			if(state.isFinal()){
 				dfa.setFinal(tmp+count);
+				finalStatesRemaining.remove(state);
+			}
 			for(String label:state.arcs().keySet()){
-				determiniseRec(dfa,state.transition(label),label,tmp+count);
-				dfa.addTransition(index,letter,tmp+count);
-				dfa.getState(tmp+count).setSeen();
+				determiniseRec(dfa,state.transition(label),label,tmp+count,finalStatesRemaining);
+				//dfa.addTransition(tmp,letter,tmp+count);
+				//dfa.getState(tmp+count).setSeen();
 				count=1;
 				while(dfa.getState(tmp+count)!=null&&dfa.getState(tmp+count).wasSeen())
 					count++;
-				tmp+=count;
 			}
+			tmp+=count;
 		}
 		if(dfa.getState(tmp)!=null)
 			dfa.getState(tmp).setSeen();
@@ -274,14 +301,15 @@ public class NFA extends FSA implements Iterable<NFA.State>{
 		f.add("Hello");
 		f.add("World");
 		//System.out.println(f.accepts("Hello"));
-		//f.add("Hell");
-		//f.add("Hi");
+		f.add("Hell");
+		f.add("Hi");
 		//System.out.println(f.accepts("World"));
 		//System.out.println(f.size());
+		//System.out.println(f.accepts("Hi"));
 		DFA dfa= f.determinise();
 		dfa.save("",false);
 		System.out.println(dfa.accepts("Hello"));
-		System.out.println(dfa.accepts("We"));
+		System.out.println(dfa.accepts("Hell"));
 		System.out.println(dfa.accepts("Hi"));
 		System.out.println(dfa.accepts("World"));
 	}
