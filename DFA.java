@@ -191,8 +191,7 @@ public class DFA extends FSA implements Iterable<DFA.State>{
 						state.addArc(letterB,state.transition(letterA));
 					}
 				}		
-		}
-		
+		}		
 	}
 
 	@Override
@@ -200,24 +199,28 @@ public class DFA extends FSA implements Iterable<DFA.State>{
 		return states.size()+(errorState==null?0:1);
 	}
 
-
 	@Override
 	public void save(String filename, boolean overwrite) {
 		StringBuilder toSave=new StringBuilder();
 		toSave.append("init 0"+FSABuilder.LS);
+		toSave.append(transitionList());
+		FSABuilder.write(toSave.toString(),filename,overwrite);
+	}
+	
+	public String transitionList(){
+		StringBuilder transitions=new StringBuilder();
 		setStateNames();
 		for(State state:this){
 			for(String letter:state.arcs().keySet()){
-				toSave.append(state.getName());
-				toSave.append(" "+letter+" ");
-				toSave.append(state.transition(letter).getName());
-				toSave.append(FSABuilder.LS);
+				transitions.append(state.getName());
+				transitions.append(" "+letter+" ");
+				transitions.append(state.transition(letter).getName());
+				transitions.append(FSABuilder.LS);
 			}
 			if(state.isFinal())
-				toSave.append("final "+state.getName()+FSABuilder.LS);
+				transitions.append("final "+state.getName()+FSABuilder.LS);
 		}
-		System.out.println(toSave);
-		//FSABuilder.write(toSave.toString(),filename,overwrite);
+		return transitions.toString();
 	}
 
 	public void setStateNames() {
@@ -229,8 +232,7 @@ public class DFA extends FSA implements Iterable<DFA.State>{
 			errorState.setName("Err");
 		
 	}
-
-
+	
 	@Override
 	public Iterator<State> iterator() {
 		return states.iterator();
@@ -246,8 +248,18 @@ public class DFA extends FSA implements Iterable<DFA.State>{
 
 	@Override
 	public boolean isMinimal() {
-		// TODO Auto-generated method stub
-		return false;
+		Object[] alpha=alphabet.toArray();
+		for(State state:this){
+			for(int i=0;i<alpha.length-1;i++)
+				for(int j=i+1;j<alpha.length;j++){
+					String letterA=(String)alpha[i];
+					String letterB=(String)alpha[j];
+					if(state.transition(letterA).isEquivalent(state.transition(letterB))){
+						return false;
+					}
+				}		
+		}
+		return true;
 	}
 
 
@@ -258,38 +270,10 @@ public class DFA extends FSA implements Iterable<DFA.State>{
 				return false;
 		return true;
 	}
-
-	/*protected void mergeAndLinkNFAStates(State state,String letter,ArrayList<NFA.State> nfaStates){
-		State next=mergeNFAStates(nfaStates);
-		state.addArc(letter,next);
-		
-	}*/
-	
-	
-	protected State mergeNFAStates(ArrayList<NFA.State> nfaStates){
-			State stateSet=new State();
-			for(NFA.State nfaState:nfaStates){
-				if(nfaState.isFinal())
-					stateSet.setFinal();
-				for(String label:nfaState.arcs().keySet()){
-					if(nfaState.transition(label).size()==1)
-						states.add(stateSet.addArc(label));
-					else
-						states.add(stateSet.addArc(label,mergeNFAStates(nfaState.transition(label))));
-				}
-			}
-			//states.add(stateSet);
-			return stateSet;
-	}
 	
 	protected State getState(int index){
 		if(index>=states.size()) return null;
 		return states.get(index);
-	}
-	
-	protected void addState(State state){
-		if(states.contains(state)) return;
-		states.add(state);
 	}
 	
 	protected void addTransition(State a, String letter, State b){
@@ -298,19 +282,15 @@ public class DFA extends FSA implements Iterable<DFA.State>{
 		}
 	}
 	
-	protected void addState(State state, int index){
-		if(states.contains(state)) return;
-		if(index>=states.size())
-			states.add(state);
-		else
-			states.set(index,state);
+	@Override
+	public DFA determinise() {
+		return this;
 	}
 	
  	public static void main(String args[]){
 		DFA f=new DFA();
 		f.add("Hello");
 		//f.add("World");
-		//new FSAView(f);
 		System.out.println(f.accepts("Hello"));
 		//System.out.println(f.accepts("World"));
 		//System.out.println(f.accepts("Worl"));
@@ -330,9 +310,4 @@ public class DFA extends FSA implements Iterable<DFA.State>{
 		System.out.println(f.size());
 	}
 
-
-	public void addAll(Collection<State> newStates) {
-		states.addAll(newStates);
-	}
-	
 }

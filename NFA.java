@@ -6,8 +6,6 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Set;
 
-import fsa.DFA.State;
-
 public class NFA extends FSA implements Iterable<NFA.State>{
 	
 	/**
@@ -110,6 +108,7 @@ public class NFA extends FSA implements Iterable<NFA.State>{
 		int length=word.length();
 		for(int i=0;i<length;i++){
 			String letter = String.valueOf(word.charAt(i));
+			alphabet.add(letter);
 			if(current.transition(letter)==null)
 				states.add(current.addArc(letter));
 			ArrayList<State> nextStates=current.transition(letter);
@@ -132,6 +131,7 @@ public class NFA extends FSA implements Iterable<NFA.State>{
 		}	
 		next=states.get(nextState);
 		states.get(startState).addArc(letter,next);
+		alphabet.add(letter);
 	}
 	
 	public void addEpsilonTransition(int startState, int nextState){
@@ -189,7 +189,6 @@ public class NFA extends FSA implements Iterable<NFA.State>{
 				}
 				states.removeAll(intermediateStates);
 			}
-			
 		}
 	}
 	
@@ -244,8 +243,6 @@ public class NFA extends FSA implements Iterable<NFA.State>{
 		if(dfa.getState(tmp)!=null)
 			dfa.getState(tmp).setSeen();
 	}
-	
-	
 	
 	public int size(){
 		return states.size();
@@ -302,15 +299,21 @@ public class NFA extends FSA implements Iterable<NFA.State>{
 		f.add("World");
 		//System.out.println(f.accepts("Hello"));
 		f.add("Hell");
-		f.add("Hi");
+		//f.add("Hi");
 		//System.out.println(f.accepts("World"));
 		//System.out.println(f.size());
 		//System.out.println(f.accepts("Hi"));
 		DFA dfa= f.determinise();
-		dfa.save("",false);
+		System.out.println(dfa.transitionList());
 		System.out.println(dfa.accepts("Hello"));
 		System.out.println(dfa.accepts("Hell"));
 		System.out.println(dfa.accepts("Hi"));
 		System.out.println(dfa.accepts("World"));
+	}
+
+	@Override
+	public String transitionList() {
+		// TODO Auto-generated method stub
+		return null;
 	}
 }

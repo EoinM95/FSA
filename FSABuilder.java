@@ -12,7 +12,6 @@ import java.util.regex.Matcher;
 
 public final class FSABuilder {
 	public static final String LS=System.getProperty("line.separator");
-	private FSABuilder(){}
 	
 	public static ArrayList<FSA> buildFromFile(String filename){
 		ArrayList<FSA> list= new ArrayList<FSA>();
@@ -20,10 +19,11 @@ public final class FSABuilder {
 			String fileContents=readFile(filename);
 			String[] automata=fileContents.split("init 0");
 			for(String a:automata){
+				a.replaceAll("#","##");
 				if(!a.equals("")){
-					FSA f=new DFA();
+					FSA f=new NFA();
 					String[] instructions=a.split(LS);
-					String transitionFormat="(?<stateA>[0-9]+) (?<label>[a-zA-Z]) (?<stateB>[0-9]+)";
+					String transitionFormat="(?<stateA>[0-9]+) (?<label>([a-zA-Z]|eps)) (?<stateB>[0-9]+)";
 					String finalFormat="final (?<state>[0-9]+)";
 					Pattern transitionPattern=Pattern.compile(transitionFormat);
 					Pattern finalPattern=Pattern.compile(finalFormat);
@@ -35,7 +35,10 @@ public final class FSABuilder {
 								int stateA=Integer.parseInt(tm.group("stateA"));
 								int stateB=Integer.parseInt(tm.group("stateB"));
 								String label=tm.group("label");
-								f.addTransition(stateA,label,stateB);
+								if(label.equals("eps"))
+									f.addEpsilonTransition(stateA,stateB);
+								else
+									f.addTransition(stateA,label,stateB);
 							}
 							else if(fm.matches()){
 								int state=Integer.parseInt(fm.group("state"));
@@ -110,15 +113,14 @@ public final class FSABuilder {
 		//System.out.println(f.accepts("aa"));
 		//System.out.println(f.accepts("aaaa"));
 		//System.out.println(f.accepts("aaaab"));
-		f.save("",false);
 		System.out.println(f.size());
-		((DFA)f).minimise();
-		System.out.println(f.size());
-		f.save("",false);
-		new FSAView(f);
-		System.out.println(f.accepts("aa"));
-		System.out.println(f.accepts("aaaa"));
-		System.out.println(f.accepts("aaaab"));
+		DFA dfa=f.determinise();
+		dfa.minimise();
+		System.out.println(dfa.size());
+		System.out.println(dfa.transitionList());
+		System.out.println(dfa.accepts("aa"));
+		System.out.println(dfa.accepts("aaaa"));
+		System.out.println(dfa.accepts("aaaab"));
 	}
 	
 	
