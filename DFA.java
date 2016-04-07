@@ -191,9 +191,23 @@ public class DFA extends FSA implements Iterable<DFA.State>{
 						state.addArc(letterB,state.transition(letterA));
 					}
 				}		
-		}		
+		}
+		//removeUnreachableStates();
 	}
-
+	
+	protected void removeUnreachableStates(){
+		HashSet<State> statesNotReached=new HashSet<State>();
+		statesNotReached.addAll(states);
+		for(State state:this){
+			for(String letter:state.arcs().keySet()){
+				if(statesNotReached.contains(state.transition(letter))){
+					statesNotReached.remove(state);
+				}
+			}
+		}
+		states.removeAll(statesNotReached);
+	}
+	
 	@Override
 	public int size() {
 		return states.size()+(errorState==null?0:1);
