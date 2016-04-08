@@ -258,12 +258,6 @@ public class NFA extends FSA implements Iterable<NFA.State>{
 		return states.iterator();
 	}
 
-	@Override
-	public void save(String filename,boolean overwrite) {
-		DFA dfa=determinise();
-		dfa.minimise();
-		dfa.save(filename,overwrite);	
-	}
 	
 	public void setStateNames() {
 		int i=0;
@@ -370,5 +364,11 @@ public class NFA extends FSA implements Iterable<NFA.State>{
 		System.out.println(dfa.accepts("Hell"));
 		System.out.println(dfa.accepts("Hi"));
 		System.out.println(dfa.accepts("World"));
+		FSA minimised=dfa.minimise();
+		System.out.println(minimised.transitionList());
+		System.out.println(minimised.accepts("Hello"));
+		System.out.println(minimised.accepts("Hell"));
+		System.out.println(minimised.accepts("Hi"));
+		System.out.println(minimised.accepts("World"));
 	}
 }

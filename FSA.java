@@ -28,7 +28,12 @@ public abstract class FSA implements Serializable{
 	abstract public boolean isMinimal();
 	abstract public boolean isComplete();
 	abstract public boolean isEpsilonFree();
-	abstract public void save(String filename, boolean overwrite);
+	public boolean save(String filename, boolean overwrite){
+		StringBuilder toSave=new StringBuilder();
+		toSave.append("init 0"+FSABuilder.LS);
+		toSave.append(transitionList());
+		return FSABuilder.write(toSave.toString(),filename,overwrite);
+	}
 	abstract public void setStateNames();
 	abstract public String transitionList();
 	abstract public FSA determinise();

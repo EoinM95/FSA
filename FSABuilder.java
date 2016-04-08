@@ -55,6 +55,8 @@ public final class FSABuilder {
 	}
 	
 	public static FSA buildFromStringList(ArrayList<String> transitions){
+		if(transitions==null||transitions.isEmpty())
+			return null;
 		FSA f = new NFA();
 		for(String transition:transitions){
 			Matcher tm=transitionPattern.matcher(transition);
