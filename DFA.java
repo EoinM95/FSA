@@ -85,14 +85,26 @@ public class DFA extends FSA implements Iterable<DFA.State>{
 		}
 		
 		public boolean isEquivalent(State other){
+			if(this.isFinal&&other.isFinal){
+				if(!this.arcs.keySet().equals(other.arcs.keySet()))
+					return false;
+				for(String letterA:arcs.keySet())
+					if(!this.transition(letterA).isEquivalentRec(other.transition(letterA)))
+						return false;
+				return true;
+			}
+			return isEquivalentRec(other);
+		}
+		
+		public boolean isEquivalentRec(State other){
 			if(this.error||other.error)
 				return error==other.error;
 			if(this.isFinal||other.isFinal)
-				return isFinal==other.isFinal&&(this.arcs.keySet().equals(other.arcs.keySet()));
+				return isFinal==other.isFinal;
 			if(!this.arcs.keySet().equals(other.arcs.keySet()))
 				return false;
 			for(String letterA:arcs.keySet())
-				if(!this.transition(letterA).isEquivalent(other.transition(letterA)))
+				if(!this.transition(letterA).isEquivalentRec(other.transition(letterA)))
 					return false;
 			return true;
 		}
@@ -191,8 +203,7 @@ public class DFA extends FSA implements Iterable<DFA.State>{
 
 	public FSA minimise(){
 		complete();
-		setStateNames();
-		Object[] alpha=alphabet.toArray();
+		//setStateNames();
 		Hashtable<State,ArrayList<State>> combinableStates=new Hashtable<State,ArrayList<State>>();
 		int n=states.size();
 		for(int i=0;i<n-1;i++){
@@ -214,12 +225,12 @@ public class DFA extends FSA implements Iterable<DFA.State>{
 			}
 		}
 		if(!combinableStates.isEmpty()){
-			for(State state:combinableStates.keySet()){
+			/*for(State state:combinableStates.keySet()){
 				ArrayList<State> equivalentStates=combinableStates.get(state);
 				for(State equiv:equivalentStates){
 					System.out.println(state.name+"+"+equiv.name);
 				}
-			}
+			}*/
 			Hashtable<ArrayList<State>,State> replacements=new Hashtable<ArrayList<State>,State>();
 			for(State state:combinableStates.keySet()){
 				replacements.put(combinableStates.get(state),state);

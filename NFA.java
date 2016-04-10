@@ -177,6 +177,7 @@ public class NFA extends FSA implements Iterable<NFA.State>{
 	}
 	
 	public void epsilonFree(){
+		HashSet<State> statesToRemove=new HashSet<State>();
 		for(State state:this){
 			if(state.transition(EPSILON)!=null){
 				ArrayList<State> intermediateStates=state.transition(EPSILON);
@@ -188,9 +189,10 @@ public class NFA extends FSA implements Iterable<NFA.State>{
 							state.addArc(label,nextState);
 					}
 				}
-				states.removeAll(intermediateStates);
+				statesToRemove.addAll(intermediateStates);
 			}
 		}
+		states.removeAll(statesToRemove);
 	}
 	
 
@@ -365,7 +367,7 @@ public class NFA extends FSA implements Iterable<NFA.State>{
 		System.out.println(dfa.accepts("Hi"));
 		System.out.println(dfa.accepts("World"));
 		FSA minimised=dfa.minimise();
-		System.out.println(minimised.transitionList());
+		//System.out.println(minimised.transitionList());
 		System.out.println(minimised.accepts("Hello"));
 		System.out.println(minimised.accepts("Hell"));
 		System.out.println(minimised.accepts("Hi"));
