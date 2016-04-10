@@ -41,10 +41,6 @@ public class DFA extends FSA implements Iterable<DFA.State>{
 			return arcs;
 		}
 		
-		public int hashCode(){
-			return arcs.hashCode();
-		}
-		
 		public boolean equals(Object o){
 			if(!(o instanceof State))
 				return false;
@@ -89,17 +85,16 @@ public class DFA extends FSA implements Iterable<DFA.State>{
 		}
 		
 		public boolean isEquivalent(State other){
-			if(this.error)
-				return other.error;
-			if(this.isFinal)
-				return other.isFinal;
+			if(this.error||other.error)
+				return error==other.error;
+			if(this.isFinal||other.isFinal)
+				return isFinal==other.isFinal&&(this.arcs.keySet().equals(other.arcs.keySet()));
 			if(!this.arcs.keySet().equals(other.arcs.keySet()))
 				return false;
 			for(String letterA:arcs.keySet())
-				for(String letterB:other.arcs.keySet())
-					if(this.transition(letterA).isEquivalent(other.transition(letterB)))
-						return true;
-			return false;
+				if(!this.transition(letterA).isEquivalent(other.transition(letterA)))
+					return false;
+			return true;
 		}
 
 		/**
@@ -197,76 +192,58 @@ public class DFA extends FSA implements Iterable<DFA.State>{
 	public FSA minimise(){
 		complete();
 		setStateNames();
-		class StatePair{
-			State a;
-			State b;
-			StatePair(State a, State b){
-				this.a=a; this.b=b;
-			}
-			State getPair(State s){
-				if(s.equals(a))
-					return a;
-				else if(s.equals(b))
-					return b;
-				return null;
-			}
-		}
 		Object[] alpha=alphabet.toArray();
-		HashSet<StatePair> combinableStates=new HashSet<StatePair>();
-		ArrayList<State> hasPair= new ArrayList<State>();
+		Hashtable<State,ArrayList<State>> combinableStates=new Hashtable<State,ArrayList<State>>();
 		int n=states.size();
 		for(int i=0;i<n-1;i++){
-			for(int j=i+1;j<n;j++){
-				combinableStates.add(new StatePair(states.get(i),states.get(j)));
-				hasPair.add(states.get(i));
-				hasPair.add(states.get(j));
+			boolean alreadySeen=false;
+			for(ArrayList<State> values:combinableStates.values()){
+				if(values.contains(states.get(i))){
+					alreadySeen=true;
+					break;
+				}	
+			}
+			if(!alreadySeen){
+				ArrayList<State> equivalentStates= new ArrayList<State>();
+				for(int j=i+1;j<n;j++){
+					if((states.get(i).isFinal()==states.get(j).isFinal())&&
+							states.get(i).isEquivalent(states.get(j)))
+						equivalentStates.add(states.get(j));
+				}
+				combinableStates.put(states.get(i),equivalentStates);
 			}
 		}
-		HashSet<StatePair> temp=new HashSet<StatePair>();
-		temp.addAll(combinableStates);
-		for(StatePair pair:combinableStates){
-			if(!(pair.a.isEquivalent(pair.b)))
-				temp.remove(pair);
-		}
-		combinableStates=temp;
 		if(!combinableStates.isEmpty()){
-			/*for(StatePair pair:combinableStates){
-				System.out.println(pair.a.name+"+"+pair.b.name);
-			}*/
-			ArrayList<State> tempStates=new ArrayList<State>();
-			tempStates.addAll(states);
-			for(int x=0;x<states.size();x++){
-				State state=states.get(x);
-				for(String label:state.arcs().keySet()){
-					if(hasPair.contains(state.transition(label))){
-						//State equivalent=
-					}
+			for(State state:combinableStates.keySet()){
+				ArrayList<State> equivalentStates=combinableStates.get(state);
+				for(State equiv:equivalentStates){
+					System.out.println(state.name+"+"+equiv.name);
 				}
 			}
-			states=tempStates;
-		}
-		//temp.addAll(states);
-		/*for(int x=0;x<states.size();x++){
-			State state=states.get(x);
-			for(int i=0;i<alpha.length-1;i++)
-				for(int j=i+1;j<alpha.length;j++){
-					String letterA=(String)alpha[i];
-					String letterB=(String)alpha[j];
-					if(state.transition(letterA).isEquivalent(state.transition(letterB))){
-						states.remove(state.transition(letterB));
-						state.addArc(letterB,state.transition(letterA));
-					}
-				}		
-		}*/
-		removeUnreachableStates();
+			Hashtable<ArrayList<State>,State> replacements=new Hashtable<ArrayList<State>,State>();
+			for(State state:combinableStates.keySet()){
+				replacements.put(combinableStates.get(state),state);
+			}
+			for(State state:this){
+				for(String label:state.arcs().keySet()){
+					State next=state.transition(label);
+					for(ArrayList<State> equivalents:replacements.keySet())
+						if(equivalents.contains(next)){
+							state.addArc(label,replacements.get(equivalents));
+						}
+							
+				}
+			}
+			for(ArrayList<State> equivalents:replacements.keySet())
+				states.removeAll(equivalents);
+		}	
+		//removeUnreachableStates();
 		return this;
 	}
 	
 	protected void removeUnreachableStates(){
 		HashSet<State> reachableStates=new HashSet<State>();
 		reachableStates.add(states.get(0));
-		//HashSet<State> statesNotReached=new HashSet<State>();
-		//statesNotReached.addAll(states);
 		for(State state:this){
 			for(String letter:state.arcs().keySet()){
 				reachableStates.add(state.transition(letter));
@@ -381,11 +358,11 @@ public class DFA extends FSA implements Iterable<DFA.State>{
 		//System.out.println(f.accepts("Hello"));
 		f.minimise();
 		//System.out.println(f.transitionList());
-		//System.out.println(f.accepts("Hello"));
-		//System.out.println(f.accepts("World"));
-		//System.out.println(f.size());
-		//f.add("Hello");
-		//System.out.println(f.accepts("Hello"));
-		//System.out.println(f.size());
+		System.out.println(f.accepts("Hello"));
+		System.out.println(f.accepts("World"));
+		System.out.println(f.size());
+		f.add("Hello");
+		System.out.println(f.accepts("Hello"));
+		System.out.println(f.size());
 	}
 }

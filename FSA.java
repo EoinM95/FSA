@@ -40,9 +40,4 @@ public abstract class FSA implements Serializable{
 	abstract public FSA minimise();
 	abstract public FSA complete();
 	abstract public void epsilonFree();
-	
-	
-
-	
-	
 }

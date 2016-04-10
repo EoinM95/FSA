@@ -104,7 +104,7 @@ public final class FSAMain {
 					if(saveChoice.equals("o")||saveChoice.equals("n")){
 						inputRecognised=true;
 						if(saveChoice.equals("o")){
-							
+							saveFSA(fsa);
 						}
 					}
 					else{
@@ -265,6 +265,7 @@ public final class FSAMain {
 		}
 	}
 	
+	@SuppressWarnings("resource")
 	public static void saveFSA(FSA fsa){
 		System.out.println("Entrez le nom du fichier");
 		Scanner sc= new Scanner(System.in);
