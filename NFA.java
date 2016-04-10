@@ -86,10 +86,32 @@ public class NFA extends FSA implements Iterable<NFA.State>{
 			return isFinal;
 		}
 		public boolean isEquivalent(State other){
-			return other.arcs.keySet()
-					.containsAll(this.arcs.keySet())
-					&&(this.isFinal==other.isFinal);
+			if(this.isFinal&&other.isFinal){
+				if(!this.arcs.keySet().equals(other.arcs.keySet()))
+					return false;
+				for(String letter:arcs.keySet())
+					for(State stateA:this.transition(letter))
+						for(State stateB:other.transition(letter))
+							if(!stateA.isEquivalentRec(stateB))
+								return false;
+				return true;
+			}
+			return isEquivalentRec(other);
 		}
+		
+		public boolean isEquivalentRec(State other){
+			if(this.isFinal||other.isFinal)
+				return isFinal==other.isFinal;
+			if(!this.arcs.keySet().equals(other.arcs.keySet()))
+				return false;
+			for(String letter:arcs.keySet())
+				for(State stateA:this.transition(letter))
+					for(State stateB:other.transition(letter))
+						if(!stateA.isEquivalentRec(stateB))
+							return false;
+			return true;
+		}
+
 		
 		/**
 		 * @param isFinal the isFinal to set
@@ -327,21 +349,12 @@ public class NFA extends FSA implements Iterable<NFA.State>{
 
 	@Override
 	public boolean isMinimal() {
-		Object[] alpha=alphabet.toArray();
-		for(State state:this){
-			for(int i=0;i<alpha.length-1;i++)
-				for(int j=i+1;j<alpha.length;j++){
-					String letterA=(String)alpha[i];
-					String letterB=(String)alpha[j];
-					if(state.transition(letterA)!=null&&state.transition(letterB)!=null){
-						for(State nextA:state.transition(letterA)){
-							for(State nextB:state.transition(letterB)){
-								if(nextA.isEquivalent(nextB))
-									return false;		
-							}
-						}
-					}	
-				}	
+		int n=states.size();
+		for(int i=0;i<n-1;i++){
+			for(int j=i+1;j<n;j++){
+				if(states.get(i).isEquivalent(states.get(j)))
+						return false;
+			}
 		}
 		return true;
 	}

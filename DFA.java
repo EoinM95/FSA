@@ -255,7 +255,6 @@ public class DFA extends FSA implements Iterable<DFA.State>{
 			for(ArrayList<State> equivalents:replacements.keySet())
 				states.removeAll(equivalents);
 		}	
-		//removeUnreachableStates();
 		return this;
 	}
 	
@@ -317,16 +316,12 @@ public class DFA extends FSA implements Iterable<DFA.State>{
 
 	@Override
 	public boolean isMinimal() {
-		Object[] alpha=alphabet.toArray();
-		for(State state:this){
-			for(int i=0;i<alpha.length-1;i++)
-				for(int j=i+1;j<alpha.length;j++){
-					String letterA=(String)alpha[i];
-					String letterB=(String)alpha[j];
-					if(state.transition(letterA).isEquivalent(state.transition(letterB))){
+		int n=states.size();
+		for(int i=0;i<n-1;i++){
+			for(int j=i+1;j<n;j++){
+				if(states.get(i).isEquivalent(states.get(j)))
 						return false;
-					}
-				}		
+			}
 		}
 		return true;
 	}
@@ -374,13 +369,15 @@ public class DFA extends FSA implements Iterable<DFA.State>{
 		//System.out.println(f.accepts("World"));
 		System.out.println(f.size());
 		//System.out.println(f.accepts("Hello"));
+		System.out.println(f.isMinimal());
 		f.minimise();
+		System.out.println(f.isMinimal());
 		//System.out.println(f.transitionList());
-		System.out.println(f.accepts("Hello"));
-		System.out.println(f.accepts("World"));
-		System.out.println(f.size());
-		f.add("Hello");
-		System.out.println(f.accepts("Hello"));
-		System.out.println(f.size());
+		//System.out.println(f.accepts("Hello"));
+		//System.out.println(f.accepts("World"));
+		//System.out.println(f.size());
+		//f.add("Hello");
+		//System.out.println(f.accepts("Hello"));
+		//System.out.println(f.size());
 	}
 }
