@@ -109,9 +109,6 @@ public class DFA extends FSA implements Iterable<DFA.State>{
 			return true;
 		}
 
-		/**
-		 * @param isFinal the isFinal to set
-		 */
 		public void setFinal() {
 			isFinal = true;
 		}
@@ -132,7 +129,9 @@ public class DFA extends FSA implements Iterable<DFA.State>{
 		errorState=null;
 	}
 
-
+	/**
+	 * @param word, ajouté un mot entier à l'automate
+	 */
 	public void add(String word){
 		State current=states.get(0);
 		int length=word.length();
@@ -148,6 +147,12 @@ public class DFA extends FSA implements Iterable<DFA.State>{
 		}
 	}
 
+	/**
+	 * Ajoute une transition entre les états spécifié sur une lettre
+	 * @param startState
+	 * @param letter, la lettre
+	 * @param nextState
+	 */ 
 	public void addTransition(int startState, String letter, int nextState){
 		State next;
 		if(nextState>=states.size()){
@@ -163,7 +168,9 @@ public class DFA extends FSA implements Iterable<DFA.State>{
 	}
 
 	
-
+	/**
+	 * 
+	 */
 	public void setFinal(int stateNumber){
 		if(stateNumber<states.size())
 			states.get(stateNumber).setFinal();

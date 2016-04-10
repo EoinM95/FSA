@@ -131,10 +131,13 @@ public final class FSABuilder {
 	public static void main(String[] args){
 		try{
 			FSA f=buildFromFile("test.txt").get(0);
-			System.out.println(f.accepts("aa"));
-			System.out.println(f.accepts("aaaa"));
-			System.out.println(f.accepts("aaaab"));
-			System.out.println(f.size());
+			//System.out.println(f.accepts("aa"));
+			//System.out.println(f.accepts("aaaa"));
+			//System.out.println(f.accepts("aaaab"));
+			//System.out.println(f.transitionList());
+			f.epsilonFree();
+			System.out.println(f.transitionList());
+			//System.out.println(f.size());
 			FSA dfa=f.determinise();
 			dfa.minimise();
 			System.out.println(dfa.size());

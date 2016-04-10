@@ -6,6 +6,8 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Set;
 
+import fsa.DFA.State;
+
 
 public class NFA extends FSA implements Iterable<NFA.State>{
 	
@@ -19,13 +21,35 @@ public class NFA extends FSA implements Iterable<NFA.State>{
 		private Hashtable<String,ArrayList<State>> arcs;
 		private boolean isFinal;
 		private String name;
+		private HashSet<State> previousStates;
 		public State(){
 			arcs=new Hashtable<String,ArrayList<State>>();
 			isFinal=false;
+			previousStates=new HashSet<State>();
+		}
+		
+		public boolean equals(Object o){
+			if(!(o instanceof State))
+				return false;
+			State other = (State)o;
+			if(other==this)
+				return true;
+			if(name!=null&&other.name!=null)
+				return name.equals(other.name);
+			return false;
 		}
 		
 		public Hashtable<String,ArrayList<State>> arcs(){
 			return arcs;
+		}
+		
+		public void addToPrevious(State state){
+			if(!state.equals(this))
+				previousStates.add(state);
+		}
+		
+		public HashSet<State> previousStates(){
+			return previousStates;
 		}
 		
 		public ArrayList<State> transition(String letter){
@@ -61,11 +85,6 @@ public class NFA extends FSA implements Iterable<NFA.State>{
 		public boolean isFinal() {
 			return isFinal;
 		}
-		
-		public int hashCode(){
-			return arcs.hashCode();
-		}
-		
 		public boolean isEquivalent(State other){
 			return other.arcs.keySet()
 					.containsAll(this.arcs.keySet())
@@ -102,6 +121,7 @@ public class NFA extends FSA implements Iterable<NFA.State>{
 	
 	public NFA(String regex){
 		//TO DO
+		this();
 	}
 	
 	public void add(String word){
@@ -113,7 +133,9 @@ public class NFA extends FSA implements Iterable<NFA.State>{
 			if(current.transition(letter)==null)
 				states.add(current.addArc(letter));
 			ArrayList<State> nextStates=current.transition(letter);
-			current=nextStates.get(nextStates.size()-1);
+			State next=nextStates.get(nextStates.size()-1);
+			next.addToPrevious(current);
+			current=next;
 			if(i==length-1){
 				current.setFinal();
 				finalStates.add(current);
@@ -131,6 +153,7 @@ public class NFA extends FSA implements Iterable<NFA.State>{
 			}
 		}	
 		next=states.get(nextState);
+		next.addToPrevious(states.get(startState));
 		states.get(startState).addArc(letter,next);
 		alphabet.add(letter);
 	}
@@ -143,9 +166,9 @@ public class NFA extends FSA implements Iterable<NFA.State>{
 				next=new State();
 				states.add(next);
 			}
-		}	
-		
+		}			
 		next=states.get(nextState);
+		next.addToPrevious(states.get(startState));
 		states.get(startState).addArc(EPSILON,next);
 	}
 	
@@ -182,14 +205,31 @@ public class NFA extends FSA implements Iterable<NFA.State>{
 			if(state.transition(EPSILON)!=null){
 				ArrayList<State> intermediateStates=state.transition(EPSILON);
 				for(State intermediateState:intermediateStates){
-					if(intermediateState.isFinal())
+					if(intermediateState.isFinal()){
 						state.setFinal();
+						finalStates.add(state);
+						finalStates.remove(intermediateState);
+					}	
 					for(String label:intermediateState.arcs().keySet()){
-						for(State nextState:intermediateState.arcs().get(label))
+						for(State nextState:intermediateState.transition(label))
 							state.addArc(label,nextState);
 					}
+					statesToRemove.addAll(intermediateStates);
+					state.arcs().remove(EPSILON);
+					for(State previousState:intermediateState.previousStates()){
+						for(String label:previousState.arcs().keySet()){
+							ArrayList<State> nextStates=previousState.transition(label);
+							int n=nextStates.size();
+							for(int i=0;i<n;i++){
+								State next=nextStates.get(i);
+								if(next.equals(intermediateState)){
+									previousState.transition(label).remove(next);
+									previousState.addArc(label,state);
+								}
+							}	
+						}
+					}
 				}
-				statesToRemove.addAll(intermediateStates);
 			}
 		}
 		states.removeAll(statesToRemove);
@@ -234,6 +274,8 @@ public class NFA extends FSA implements Iterable<NFA.State>{
 			dfa.addTransition(index,letter,index);
 			tmp.remove(nfaState);
 		}
+		if(finalStatesRemaining.isEmpty())
+			return;
 		for(State state:tmp){
 			if(state.isFinal()){
 				dfa.setFinal(index+count);
