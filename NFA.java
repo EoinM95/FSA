@@ -217,9 +217,16 @@ public class NFA extends FSA implements Iterable<NFA.State>{
 				return true;
 		return false;
 	}
-	
+	/**
+	 * Rendre l'automate epsilon-libre
+	 * 	-Pour chaque état
+	 * 		-Si il a des transitions epilson
+	 * 			-ajouter des transitions alphabétique vers ces états
+	 * 			-si l'état intermédiate est final, rendre cet état final
+	 * 			-ajouter des transitions des états qui précede l'état intérmediate à cet état
+	 * 	-Supprimer tous les états non-nécessaire		
+	 */
 	public void epsilonFree(){
-		HashSet<State> statesToRemove=new HashSet<State>();
 		for(State state:this){
 			if(state.transition(EPSILON)!=null){
 				ArrayList<State> intermediateStates=state.transition(EPSILON);
@@ -233,26 +240,10 @@ public class NFA extends FSA implements Iterable<NFA.State>{
 						for(State nextState:intermediateState.transition(label))
 							state.addArc(label,nextState);
 					}
-					statesToRemove.addAll(intermediateStates);
 					state.arcs().remove(EPSILON);
-					for(State previousState:intermediateState.previousStates()){
-						if(!statesToRemove.contains(previousState))
-							for(String label:previousState.arcs().keySet()){
-								ArrayList<State> nextStates=previousState.transition(label);
-								int n=nextStates.size();
-								for(int i=0;i<n;i++){
-									State next=nextStates.get(i);
-									if(next.equals(intermediateState)){
-										previousState.transition(label).remove(next);
-										previousState.addArc(label,state);
-									}
-								}	
-							}
-					}
 				}
 			}
 		}
-		states.removeAll(statesToRemove);
 	}
 	
 
