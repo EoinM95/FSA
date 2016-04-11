@@ -1,12 +1,9 @@
 package fsa;
-
 import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Set;
-
-import fsa.DFA.State;
 
 
 public class NFA extends FSA implements Iterable<NFA.State>{
@@ -239,17 +236,18 @@ public class NFA extends FSA implements Iterable<NFA.State>{
 					statesToRemove.addAll(intermediateStates);
 					state.arcs().remove(EPSILON);
 					for(State previousState:intermediateState.previousStates()){
-						for(String label:previousState.arcs().keySet()){
-							ArrayList<State> nextStates=previousState.transition(label);
-							int n=nextStates.size();
-							for(int i=0;i<n;i++){
-								State next=nextStates.get(i);
-								if(next.equals(intermediateState)){
-									previousState.transition(label).remove(next);
-									previousState.addArc(label,state);
-								}
-							}	
-						}
+						if(!statesToRemove.contains(previousState))
+							for(String label:previousState.arcs().keySet()){
+								ArrayList<State> nextStates=previousState.transition(label);
+								int n=nextStates.size();
+								for(int i=0;i<n;i++){
+									State next=nextStates.get(i);
+									if(next.equals(intermediateState)){
+										previousState.transition(label).remove(next);
+										previousState.addArc(label,state);
+									}
+								}	
+							}
 					}
 				}
 			}
@@ -258,6 +256,14 @@ public class NFA extends FSA implements Iterable<NFA.State>{
 	}
 	
 
+	/**
+	 * Converter cet automate en DFA
+	 * 	-Pour chaque état:
+	 * 		-Pour chaque symbol qu'il reconnait
+	 * 			-Ajouter une transition au DFA vers un nouvel état
+	 * 			-Refaire l'opération entiere sur la liste des états state.transition(letter)
+	 * 	-Arreter apres avoir vu tous les états finaux du NFA  
+	 */
 	public DFA determinise(){
 		epsilonFree();
 		HashSet<State> finalStatesRemaining=new HashSet<State>();
@@ -375,7 +381,10 @@ public class NFA extends FSA implements Iterable<NFA.State>{
 			for(String letter:state.arcs().keySet()){
 				for(State next:state.transition(letter)){
 					transitions.append(state.getName());
-					transitions.append(" "+letter+" ");
+					if(letter.equals(EPSILON))
+						transitions.append(" eps ");
+					else
+						transitions.append(" "+letter+" ");
 					transitions.append(next.getName());
 					transitions.append(FSABuilder.LS);
 				}

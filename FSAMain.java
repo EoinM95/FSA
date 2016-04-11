@@ -65,10 +65,13 @@ public final class FSAMain {
 	
 	public static void constructAutomaton(){
 		boolean finished=false;
-		System.out.println("Entrez vos transitions dans le format: étatNombre lettre|eps etatNombre");
+		System.out.println("Entrez vos transitions ligne par ligne dans le format: étatNombre lettre|eps etatNombre");
 		System.out.println("Pour rendre un état final entrez:final étatNombre");
 		System.out.println("Pour finir taper:fin");
 		ArrayList<String> automat=new ArrayList<String>();
+		if(sc.hasNextLine())
+			sc.nextLine();
+		sc.useDelimiter(FSABuilder.LS);
 		while(!finished){
 			if(sc.hasNext()){
 				String input=sc.next();
@@ -80,6 +83,7 @@ public final class FSAMain {
 					Matcher fm=FSABuilder.finalPattern.matcher(input);
 					if(tm.matches()||fm.matches()){
 						automat.add(input);
+						System.out.println("Transition ajoutée");
 					}
 					else{
 						System.out.println("Votre commande n'était pas reconnu");
@@ -87,6 +91,7 @@ public final class FSAMain {
 				}
 			}
 		}
+		sc.reset();
 		FSA fsa=FSABuilder.buildFromStringList(automat);
 		if(fsa!=null){
 			System.out.println("Votre automat contient les transitions:");
@@ -150,10 +155,14 @@ public final class FSAMain {
 						}
 						else{
 							System.out.println("Indice hors de bourne, essayez encore");
+							if(sc.hasNext())
+								sc.next();
 						}
 					}
 					else{
 						System.out.println("Il faut entrer un entier, essayez encore");
+						if(sc.hasNext())
+							sc.next();
 					}
 				}
 			}
@@ -184,16 +193,16 @@ public final class FSAMain {
 			}
 			else{
 				System.out.println("Votre commande n'était pas reconnu");
+				if(sc.hasNext())
+					sc.next();
 			}
 		}
 	}
 	
 	public static void testAccept(FSA fsa){
 		System.out.println("Entrez le mot que vous voulez tester");
-		if(sc.hasNext()){
-			String word=sc.next();
-			System.out.println("Mot accepté?: "+fsa.accepts(word));
-		}
+		String word=sc.next();
+		System.out.println("Mot accepté?: "+fsa.accepts(word));
 	}
 	
 	public static void transform(FSA fsa){
@@ -223,6 +232,8 @@ public final class FSAMain {
 		}
 		else{
 			System.out.println("Votre commande n'était pas reconnu");
+			if(sc.hasNext())
+				sc.next();
 		}
 		if(t!=null)
 			transform(fsa,t);

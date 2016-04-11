@@ -69,9 +69,6 @@ public class DFA extends FSA implements Iterable<DFA.State>{
 			return next;
 		}
 
-		/**
-		 * @return the isFinal
-		 */
 		public boolean isFinal() {
 			return isFinal;
 		}
@@ -84,6 +81,13 @@ public class DFA extends FSA implements Iterable<DFA.State>{
 			seen=true;
 		}
 		
+		/**
+		 * 
+		 * @param other
+		 * @return true, ssi les des deux états ne sont pas distincts l'un d l'autre
+		 * 			autrement dit: ils reconnaient tous les deux le meme langage
+		 * 			et tous les entrees possible nous mene à des états qui sont equivalents aussi
+		 */
 		public boolean isEquivalent(State other){
 			if(this.isFinal&&other.isFinal){
 				if(!this.arcs.keySet().equals(other.arcs.keySet()))
@@ -131,6 +135,7 @@ public class DFA extends FSA implements Iterable<DFA.State>{
 
 	/**
 	 * @param word, ajouté un mot entier à l'automate
+	 * l'automate ne va pas changer si le mot est dèja reconnu
 	 */
 	public void add(String word){
 		State current=states.get(0);
@@ -169,7 +174,7 @@ public class DFA extends FSA implements Iterable<DFA.State>{
 
 	
 	/**
-	 * 
+	 * @param stateNumber, l'état de rendre final
 	 */
 	public void setFinal(int stateNumber){
 		if(stateNumber<states.size())
@@ -178,6 +183,10 @@ public class DFA extends FSA implements Iterable<DFA.State>{
 			System.out.println("Etat "+stateNumber+" n'existe pas");
 	}
 
+	/**
+	 * Tester si un mot est reconnu par l'automate
+	 * @param word
+	 */
 	public boolean accepts(String word){
 		State current=states.get(0);
 		int length=word.length();
@@ -191,6 +200,12 @@ public class DFA extends FSA implements Iterable<DFA.State>{
 		return current.isFinal();
 	}
 
+	/**
+	 * Rendre l'automate complet
+	 * -initialiser un état puit
+	 * -ajouter un lien à chaque état vers l'état puit s'il n'a pas un lien pour chaque
+	 * 		lettre dans l'alphabet reconnu par l'automate
+	 */
 	public FSA complete(){
 		errorState=new State();
 		errorState.setError(true);
@@ -208,6 +223,15 @@ public class DFA extends FSA implements Iterable<DFA.State>{
 		return this;
 	}
 
+	/**
+	 * Minimise l'automate
+	 * 	-Comparer tous les états deux à deux
+	 *  -Tester s'ils sont distincts l'un de l'autre
+	 *  -Mettre tous les états equivalent dans une table de hashage
+	 *  	avec une clé qui correspond à l'état avec lequel on va les remplacer
+	 *  -Parcourir l'automate et remplacer tous les liens vers un état dans 
+	 *  	la liste d'équivalents
+	 */
 	public FSA minimise(){
 		complete();
 		//setStateNames();
@@ -239,6 +263,7 @@ public class DFA extends FSA implements Iterable<DFA.State>{
 				}
 			}*/
 			Hashtable<ArrayList<State>,State> replacements=new Hashtable<ArrayList<State>,State>();
+			//Inverser la table de hashage
 			for(State state:combinableStates.keySet()){
 				replacements.put(combinableStates.get(state),state);
 			}
@@ -255,9 +280,12 @@ public class DFA extends FSA implements Iterable<DFA.State>{
 			for(ArrayList<State> equivalents:replacements.keySet())
 				states.removeAll(equivalents);
 		}	
+		removeUnreachableStates();
 		return this;
 	}
-	
+	/**
+	 * Supprimer des états inaccesible
+	 */
 	protected void removeUnreachableStates(){
 		HashSet<State> reachableStates=new HashSet<State>();
 		reachableStates.add(states.get(0));
